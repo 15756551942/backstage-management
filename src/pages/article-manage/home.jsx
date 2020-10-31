@@ -11,27 +11,8 @@ export default class Home extends Component{
     articleLists:[]
   }
 
-
-  getArticleLists = () => {
-    reqArticleSearch().then(response => {
-      console.log(response.data)
-      this.setState({
-        total:response.data.data.total,
-        articleLists:response.data.data.articleList
-      })
-    }).catch(error => {
-      console.log(error)
-    })
-  }
-
-  componentDidMount(){
-    this.getArticleLists()
-  }
-
-  render(){
-    const {articleLists,total} = this.state
-
-    const columns = [
+  componentWillMount() {
+    this.columns =[
       {
         title: 'ID',
         dataIndex: 'order',
@@ -78,7 +59,27 @@ export default class Home extends Component{
           </span>
         )
       }
-    ];
+    ]
+  }
+
+  getArticleLists = () => {
+    reqArticleSearch().then(response => {
+      console.log(response.data)
+      this.setState({
+        total:response.data.data.total,
+        articleLists:response.data.data.articleList
+      })
+    }).catch(error => {
+      console.log(error)
+    })
+  }
+
+  componentDidMount(){
+    this.getArticleLists()
+  }
+
+  render(){
+    const {articleLists,total} = this.state
     
     const extre = (
       <Button type='primary' onClick={() => this.props.history.push('/articlemanage/add')}><PlusOutlined></PlusOutlined>新增</Button>
@@ -120,7 +121,15 @@ export default class Home extends Component{
           </div>
         </Card>
         <Card title="Article列表" extra={extre} className='home'>
-          <Table dataSource={articleLists} columns={columns} bordered rowKey='id' pagination={{showQuickJumper:true,total}}/>
+          <Table 
+          dataSource={articleLists} 
+          columns={this.columns} 
+          bordered rowKey='id' 
+          pagination={{
+            showQuickJumper:true,
+            total,
+          }}
+          />
         </Card>
       </div>
     )
