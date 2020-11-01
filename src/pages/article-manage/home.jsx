@@ -8,14 +8,31 @@ import {reqArticleSearch} from '../../api'
 export default class Home extends Component{
   state = {
     total:0,
-    articleLists:[]
+    articleLists:[],
+    type:'',
+    status:''
+  }
+
+  tratimeformat = (time) => {
+    var date = new Date(time)
+    var Y = date.getFullYear() + '-'
+    var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
+    const D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' '
+    const h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':'
+    const m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':'
+    const s = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds())
+    return Y + M + D + h + m + s
   }
 
   componentWillMount() {
+    const {articleLists} = this.state
     this.columns =[
       {
         title: 'ID',
-        dataIndex: 'order',
+        render: (obj) => {
+          console.log(articleLists.indexOf(obj))
+          return <span>{articleLists.indexOf(obj)}</span>
+        },
         align: 'center'
       },
       {
@@ -25,17 +42,32 @@ export default class Home extends Component{
       },
       {
         title: '类型',
-        dataIndex: 'type',
+        render: (obj) => {
+          // console.log(obj)
+          if(obj.type === 0){
+            return <span>首页banner</span>
+          }else if(obj.type === 1){
+            return <span>找职位banner</span>
+          }else if(obj.type === 2){
+            return <span>找精英banner</span>
+          }else if(obj.type === 3){
+            return <span>行业大图</span>
+          }
+        },
         align: 'center'
       },
       {
         title: '发布时间',
-        dataIndex: 'createAt',
+        render: (obj) => {
+          return <span>{this.tratimeformat(obj.createAt)}</span>
+        },
         align: 'center'
       },
       {
         title: '修改时间',
-        dataIndex: 'updateAt',
+        render: (obj) => {
+          return <span>{this.tratimeformat(obj.updateAt)}</span>
+        },
         align: 'center'
       },
       {
@@ -45,13 +77,19 @@ export default class Home extends Component{
       },
       {
         title: '状态',
-        dataIndex: 'status',
+        render: (obj) => {
+          if(obj.status === 1){
+            return <span>草稿</span>
+          }else{
+            return <span>上线</span>
+          }
+        },
         align: 'center'
       },
       {
         title: '操作',
         align: 'center',
-        render: (product) => (
+        render: () => (
           <span>
             <LinkButton>下线</LinkButton>
             <LinkButton>编辑</LinkButton>
@@ -62,8 +100,8 @@ export default class Home extends Component{
     ]
   }
 
-  getArticleLists = () => {
-    reqArticleSearch().then(response => {
+  getArticleLists = ({page}) => {
+    reqArticleSearch({page}).then(response => {
       console.log(response.data)
       this.setState({
         total:response.data.data.total,
@@ -74,12 +112,26 @@ export default class Home extends Component{
     })
   }
 
+  searchBy = ({page,type,status}) => {
+    reqArticleSearch({page,type,status}).then(response => {
+      console.log(response.data)
+      this.setState({
+        total:response.data.data.total,
+        articleLists:response.data.data.articleList,
+        type:response.data.data.articleList.type,
+        status:response.data.data.articleList.status
+      })
+    }).catch(
+
+    )
+  }
+
   componentDidMount(){
-    this.getArticleLists()
+    this.getArticleLists(1)
   }
 
   render(){
-    const {articleLists,total} = this.state
+    const {articleLists,total,type,status} = this.state
     
     const extre = (
       <Button type='primary' onClick={() => this.props.history.push('/articlemanage/add')}><PlusOutlined></PlusOutlined>新增</Button>
@@ -98,26 +150,31 @@ export default class Home extends Component{
             </span>
             <span style={{width:350}}>
               <span>类型</span>
-              <Select value='1' style={{width:250,marginLeft:20}}>
-                <Select.Option value='1'>全部</Select.Option>
-                <Select.Option value='2'>首页Banner</Select.Option>
-                <Select.Option value='3'>找职业Banner</Select.Option>
-                <Select.Option value='4'>找精英Banner</Select.Option>
-                <Select.Option value='5'>行业大图</Select.Option>
+              <Select
+              
+              labelInValue
+              style={{width:250,marginLeft:20}} 
+              onChange={value => this.setState({[type]:value.value})}
+              >
+                <Select.Option value=''>全部</Select.Option>
+                <Select.Option value='0'>首页Banner</Select.Option>
+                <Select.Option value='1'>找职业Banner</Select.Option>
+                <Select.Option value='2'>找精英Banner</Select.Option>
+                <Select.Option value='3'>行业大图</Select.Option>
               </Select>
             </span>
             <span style={{width:350}}>
               <span>状态</span>
-              <Select value='1' style={{width:250,marginLeft:48}}>
-                <Select.Option value='1'>全部</Select.Option>
+              <Select style={{width:250,marginLeft:48}} labelInValue onChange={value => this.setState({[status]:value.value})}>
+                <Select.Option value='全部'>全部</Select.Option>
                 <Select.Option value='2'>上线</Select.Option>
-                <Select.Option value='3'>草稿</Select.Option>
+                <Select.Option value='1'>草稿</Select.Option>
               </Select>
             </span>
           </div>
           <div style={{marginLeft:1000}}>
             <Button type='primary'>清空</Button>
-            <Button type='primary'>搜索</Button>
+            <Button type='primary' onClick={(current,type,status) => this.searchBy({page:current,type:type,status:status})}>搜索</Button>
           </div>
         </Card>
         <Card title="Article列表" extra={extre} className='home'>
@@ -128,6 +185,7 @@ export default class Home extends Component{
           pagination={{
             showQuickJumper:true,
             total,
+            onChange: (current) => {this.getArticleLists({page:current,size:10})}
           }}
           />
         </Card>
