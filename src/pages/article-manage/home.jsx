@@ -3,7 +3,7 @@ import { Card,Button,Table,Select,Input } from 'antd';
 import {PlusOutlined} from '@ant-design/icons'
 
 import LinkButton from '../../components/link-button/link-button'
-import {reqArticleSearch} from '../../api'
+import {reqArticleSearch,reqArticleBy,reqArticleByType,reqArticleByStatus} from '../../api'
 
 export default class Home extends Component{
   state = {
@@ -112,23 +112,55 @@ export default class Home extends Component{
     })
   }
 
-  searchBy = ({page,type,status}) => {
-    reqArticleSearch({page,type,status}).then(response => {
-      console.log(response.data)
-      this.setState({
-        total:response.data.data.total,
-        articleLists:response.data.data.articleList,
-        type:response.data.data.articleList.type,
-        status:response.data.data.articleList.status
+  getArticleBy = (page,type,status) => {
+    if(type === '' && status === ''){
+      reqArticleBy(page).then(response => {
+        this.setState({
+          total:response.data.data.total,
+          articleLists:response.data.data.articleList
+        })
+      }).catch(error => {
+        console.log(error)
       })
-    }).catch(
-
-    )
+    }else if(status === ''){
+      reqArticleByType(page,Number(type)).then(response => {
+        this.setState({
+          total:response.data.data.total,
+          articleLists:response.data.data.articleList
+        })
+      }).catch(error => {
+        console.log(error)
+      })
+    }else if(type === ''){
+      reqArticleByStatus(page,Number(status)).then(response => {
+        this.setState({
+          total:response.data.data.total,
+          articleLists:response.data.data.articleList
+        })
+      }).catch(error => {
+        console.log(error)
+      })
+    }else {
+      reqArticleBy(page,Number(type),Number(status)).then(response => {
+        this.setState({
+          total:response.data.data.total,
+          articleLists:response.data.data.articleList
+        })
+      }).catch(error => {
+        console.log(error)
+      })
+    }
   }
+
+  
 
   componentDidMount(){
     this.getArticleLists(1)
   }
+
+  // function handleChange(value) {
+  //   console.log(value); // { value: "lucy", key: "lucy", label: "Lucy (101)" }
+  // }
 
   render(){
     const {articleLists,total,type,status} = this.state
@@ -151,10 +183,9 @@ export default class Home extends Component{
             <span style={{width:350}}>
               <span>类型</span>
               <Select
-              
-              labelInValue
+              value={type}
               style={{width:250,marginLeft:20}} 
-              onChange={value => this.setState({[type]:value.value})}
+              onChange={value => this.setState({type:value})}
               >
                 <Select.Option value=''>全部</Select.Option>
                 <Select.Option value='0'>首页Banner</Select.Option>
@@ -165,8 +196,12 @@ export default class Home extends Component{
             </span>
             <span style={{width:350}}>
               <span>状态</span>
-              <Select style={{width:250,marginLeft:48}} labelInValue onChange={value => this.setState({[status]:value.value})}>
-                <Select.Option value='全部'>全部</Select.Option>
+              <Select 
+              value={status} 
+              style={{width:250,marginLeft:48}} 
+              onChange={value => this.setState({status:value})}
+              >
+                <Select.Option value=''>全部</Select.Option>
                 <Select.Option value='2'>上线</Select.Option>
                 <Select.Option value='1'>草稿</Select.Option>
               </Select>
@@ -174,7 +209,7 @@ export default class Home extends Component{
           </div>
           <div style={{marginLeft:1000}}>
             <Button type='primary'>清空</Button>
-            <Button type='primary' onClick={(current,type,status) => this.searchBy({page:current,type:type,status:status})}>搜索</Button>
+            <Button type='primary' onClick={() => this.getArticleBy(1,type,status)}>搜索</Button>
           </div>
         </Card>
         <Card title="Article列表" extra={extre} className='home'>
@@ -185,7 +220,7 @@ export default class Home extends Component{
           pagination={{
             showQuickJumper:true,
             total,
-            onChange: (current) => {this.getArticleLists({page:current,size:10})}
+            onChange: (current) => {this.getArticleLists({page:current})}
           }}
           />
         </Card>
