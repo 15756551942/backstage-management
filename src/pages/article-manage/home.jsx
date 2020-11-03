@@ -4,6 +4,8 @@ import {PlusOutlined} from '@ant-design/icons'
 
 import LinkButton from '../../components/link-button/link-button'
 import {reqArticleSearch,reqArticleBy,reqArticleByType,reqArticleByStatus} from '../../api'
+import {tratimeformat} from '../../utils/utils'
+import {bannerType} from '../../utils/CONST'
 
 export default class Home extends Component{
   state = {
@@ -11,17 +13,6 @@ export default class Home extends Component{
     articleLists:[],
     type:'',
     status:''
-  }
-
-  tratimeformat = (time) => {
-    var date = new Date(time)
-    var Y = date.getFullYear() + '-'
-    var M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-'
-    const D = (date.getDate() < 10 ? '0' + date.getDate() : date.getDate()) + ' '
-    const h = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':'
-    const m = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':'
-    const s = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds())
-    return Y + M + D + h + m + s
   }
 
   componentWillMount() {
@@ -44,29 +35,30 @@ export default class Home extends Component{
         title: '类型',
         render: (obj) => {
           // console.log(obj)
-          if(obj.type === 0){
-            return <span>首页banner</span>
-          }else if(obj.type === 1){
-            return <span>找职位banner</span>
-          }else if(obj.type === 2){
-            return <span>找精英banner</span>
-          }else if(obj.type === 3){
-            return <span>行业大图</span>
-          }
+          // if(obj.type === 0){
+          //   return <span>首页banner</span>
+          // }else if(obj.type === 1){
+          //   return <span>找职位banner</span>
+          // }else if(obj.type === 2){
+          //   return <span>找精英banner</span>
+          // }else if(obj.type === 3){
+          //   return <span>行业大图</span>
+          // }
+          return bannerType[obj.type]
         },
         align: 'center'
       },
       {
         title: '发布时间',
         render: (obj) => {
-          return <span>{this.tratimeformat(obj.createAt)}</span>
+          return <span>{tratimeformat(obj.createAt)}</span>
         },
         align: 'center'
       },
       {
         title: '修改时间',
         render: (obj) => {
-          return <span>{this.tratimeformat(obj.updateAt)}</span>
+          return <span>{tratimeformat(obj.updateAt)}</span>
         },
         align: 'center'
       },
@@ -99,9 +91,9 @@ export default class Home extends Component{
       }
     ]
   }
-
-  getArticleLists = ({page}) => {
-    reqArticleSearch({page}).then(response => {
+  
+  getArticleLists = (page) => {
+    reqArticleSearch(page).then(response => {
       console.log(response.data)
       this.setState({
         total:response.data.data.total,
@@ -152,15 +144,9 @@ export default class Home extends Component{
     }
   }
 
-  
-
   componentDidMount(){
     this.getArticleLists(1)
   }
-
-  // function handleChange(value) {
-  //   console.log(value); // { value: "lucy", key: "lucy", label: "Lucy (101)" }
-  // }
 
   render(){
     const {articleLists,total,type,status} = this.state
@@ -220,7 +206,7 @@ export default class Home extends Component{
           pagination={{
             showQuickJumper:true,
             total,
-            onChange: (current) => {this.getArticleLists({page:current})}
+            onChange: (current) => {this.getArticleBy({page:current,type:type,status:status})}
           }}
           />
         </Card>
