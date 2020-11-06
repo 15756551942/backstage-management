@@ -3,7 +3,7 @@ import { Card,Button,Table,Select,Input } from 'antd';
 import {PlusOutlined} from '@ant-design/icons'
 
 import LinkButton from '../../components/link-button/link-button'
-import {reqArticleSearch,reqArticleBy,reqArticleByType,reqArticleByStatus} from '../../api'
+import {reqArticleSearch,reqArticleBy,reqArticleByType,reqArticleByStatus,reqDeleteArticleList} from '../../api'
 import {tratimeformat} from '../../utils/utils'
 import {bannerType} from '../../utils/CONST'
 
@@ -81,15 +81,23 @@ export default class Home extends Component{
       {
         title: '操作',
         align: 'center',
-        render: () => (
+        render: (obj) => (
           <span>
-            <LinkButton>下线</LinkButton>
+            <LinkButton>{obj.status === 1?'上线':'下线'}</LinkButton>
             <LinkButton>编辑</LinkButton>
-            <LinkButton>删除</LinkButton>
+            <LinkButton onClick={() => this.reqDeleteArticleList(obj.id)}>删除</LinkButton>
           </span>
         )
       }
     ]
+  }
+
+  deleteArticleList = (currentId) => {
+    reqDeleteArticleList(currentId).then(response => {
+      console.log(response.data)
+    }).catch(error => {
+      console.log(error)
+    })
   }
   
   getArticleLists = (page) => {
